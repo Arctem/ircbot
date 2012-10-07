@@ -2,13 +2,15 @@ import irclib
 import random
 import time
 import thread
+import sys
 
 class IRCBot:
     message_buffer = []
-    sleep_time = 2.5
+    sleep_time = .5 #Minimum time between messages.
+    default_timeout = 0.2
     
     def __init__(self, network = 'irc.cs.nmt.edu', port = 6667,
-        channel = ('#bottest'), nick = 'testbot', name = 'None', debug = False):
+        channel = ('#bottest', ), nick = 'testbot', name = 'None', debug = False):
         #Debug data
         irclib.DEBUG = debug
         
@@ -18,6 +20,7 @@ class IRCBot:
         self.channel = channel
         self.nick = nick
         self.name = name
+        self.ipv6 = False
     
     #Initialize the irc object and initialize the handlers.
     def initIRC(self):
@@ -53,7 +56,7 @@ class IRCBot:
     def start(self):
         #Create a server object, connect and join the channel.
         self.server = self.irc.server()
-        self.server.connect(self.network, self.port, self.nick, ircname = self.name)
+        self.server.connect(self.network, self.port, self.nick, ircname = self.name, ipv6 = self.ipv6)
         for s in self.channel:
             self.server.join(s)
 
@@ -61,25 +64,35 @@ class IRCBot:
         thread.start_new_thread(self.process_message_buffer, ())
 
         #Start infinite loop.
-        self.irc.process_forever()
+        while True:
+            self.process(self.default_timeout)
+        #self.irc.process_forever()
+    
+    #Carries out one iteration of IRC communications.
+    def process(self, timeout = 0.2):
+        self.nick = self.server.get_nickname()
+        self.irc.process_once(timeout)
     
     #Avoids server flooding.
     def process_message_buffer(self):
-        while True:
-            if len(self.message_buffer) > 2:
-                print ' Message buffer: {}'.format(len(self.message_buffer))
-            if len(self.message_buffer) > 0:
-                msg = self.message_buffer.pop(0)
-                if msg[0]:
-                    msg[1].action(msg[2].target(), msg[3])
+        try:
+            while True:
+                if len(self.message_buffer) > 2:
+                    print ' Message buffer: {}'.format(len(self.message_buffer))
+                if len(self.message_buffer) > 0:
+                    msg = self.message_buffer.pop(0)
+                    if msg[1]:
+                        msg[2].action(msg[3].target(), msg[0])
+                    else:
+                        msg[2].privmsg(msg[3].target(), msg[0])
+                    time.sleep(self.sleep_time)
                 else:
-                    msg[1].privmsg(msg[2].target(), msg[3])
-                time.sleep(self.sleep_time)
-            else:
-                time.sleep(0.1)
+                    time.sleep(0.1)
+        except:
+            print sys.exc_info()
     
     #Add things to message buffer.
-    def add_to_buffer(self, is_action, connection, event, output):
+    def add_to_buffer(self, connection, event, output, is_action = False):
         self.message_buffer.append((is_action, connection, event, output))
     
     #Generic echo handler
