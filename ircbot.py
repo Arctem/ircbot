@@ -56,9 +56,11 @@ class IRCBot:
     def start(self):
         #Create a server object, connect and join the channel.
         self.server = self.irc.server()
-        self.server.connect(self.network, self.port, self.nick, ircname = self.name, ipv6 = self.ipv6)
-        for s in self.channel:
-            self.server.join(s)
+        self.connection = self.server.connect(self.network, self.port, self.nick, ircname = self.name, ipv6 = self.ipv6)
+        
+        self.irc.process_once(self.default_timeout)
+        
+        thread.start_new_thread(self.wait_join, (5, ))
 
         #Send test messages.
         thread.start_new_thread(self.process_message_buffer, ())
@@ -68,10 +70,29 @@ class IRCBot:
             self.process(self.default_timeout)
         #self.irc.process_forever()
     
+    def wait_join(self, t):
+        time.sleep(t)
+        for s in self.channel:
+            print(' Joining {}'.format(s))
+            self.connection.join(s)
+    
+    def on_welcome(self, c, e):
+        for s in self.channel:
+            c.join(s)
+    
     #Carries out one iteration of IRC communications.
     def process(self, timeout = 0.2):
+        joined = 10
         self.nick = self.server.get_nickname()
         self.irc.process_once(timeout)
+        
+        if joined is 0:
+            print 'Joining channels'
+            for s in self.channel:
+                self.connection.join(s)
+            joined = -1
+        elif joined > 0:
+            joined -= 1
     
     #Avoids server flooding.
     def process_message_buffer(self):
@@ -81,10 +102,10 @@ class IRCBot:
                     print ' Message buffer: {}'.format(len(self.message_buffer))
                 if len(self.message_buffer) > 0:
                     msg = self.message_buffer.pop(0)
-                    if msg[1]:
-                        msg[2].action(msg[3].target(), msg[0])
+                    if msg[0]:
+                        msg[1].action(msg[2].target(), msg[3])
                     else:
-                        msg[2].privmsg(msg[3].target(), msg[0])
+                        msg[1].privmsg(msg[2].target(), msg[3])
                     time.sleep(self.sleep_time)
                 else:
                     time.sleep(0.1)
@@ -129,4 +150,4 @@ class IRCBot:
 
     #Handle public messages.
     def handle_pub_message(self, connection, event):
-        print event.target() + '> ' + event.source().split('!')[0] + ': ' + event.arguments()[0]
+        print '<' + event.target() + '> ' + event.source().split('!')[0] + ': ' + event.arguments()[0]
