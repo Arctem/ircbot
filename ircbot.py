@@ -1,153 +1,92 @@
-import irclib
-import random
-import time
-import thread
+#!/usr/bin/env python3
+  
 import sys
+import socket
+import string
+import select
+
+import ircutil
+ 
 
 class IRCBot:
-    message_buffer = []
-    sleep_time = .5 #Minimum time between messages.
-    default_timeout = 0.2
-    
-    def __init__(self, network = 'irc.cs.nmt.edu', port = 6667,
-        channel = ('#bottest', ), nick = 'testbot', name = 'None', debug = False):
-        #Debug data
-        irclib.DEBUG = debug
-        
-        #Connection data.
-        self.network = network
-        self.port = port
-        self.channel = channel
+    def __init__(self, nick, realname):
         self.nick = nick
-        self.name = name
-        self.ipv6 = False
-    
-    #Initialize the irc object and initialize the handlers.
-    def initIRC(self):
-        #Create an IRC object.
-        self.irc = irclib.IRC()
+        self.realname = realname
+        self.readbuffer = ""
+        self.sock = None
 
-        # Register handlers
-        self.irc.add_global_handler('privnotice', self.handle_priv_notice) #Private notice
-        self.irc.add_global_handler('welcome', self.handle_echo) #Welcome message
-        self.irc.add_global_handler('yourhost', self.handle_echo) #Host message
-        self.irc.add_global_handler('created', self.handle_echo) #Server creation message
-        self.irc.add_global_handler('myinfo', self.handle_echo) #"My info" message
-        self.irc.add_global_handler('featurelist', self.handle_echo) #Server feature list
-        self.irc.add_global_handler('luserclient', self.handle_echo) #User count
-        self.irc.add_global_handler('luserop', self.handle_echo) #Operator count
-        self.irc.add_global_handler('luserchannels', self.handle_echo) #Channel count
-        self.irc.add_global_handler('luserme', self.handle_echo) #Server client count
-        self.irc.add_global_handler('n_local', self.handle_echo) #Server client count/maximum
-        self.irc.add_global_handler('n_global', self.handle_echo) #Network client count/maximum
-        self.irc.add_global_handler('luserconns', self.handle_echo) #Record client count
-        self.irc.add_global_handler('luserunknown', self.handle_echo) #Unknown connections
-        self.irc.add_global_handler('motdstart', self.handle_echo) #Message of the day ( start)
-        self.irc.add_global_handler('motd', self.handle_echo_no_space) #Message of the day
-        self.irc.add_global_handler('edofmotd', self.handle_echo) #Message of the day ( end)
-        self.irc.add_global_handler('join', self.handle_join) #Channel join
-        self.irc.add_global_handler('namreply', self.handle_echo_no_space) #Channel name list
-        self.irc.add_global_handler('endofnames', self.handle_echo_no_space) #Channel name list ( end)
-        self.irc.add_global_handler('invite', self.handle_invite) #Invitation to a new channel.
-        self.irc.add_global_handler('privmsg', self.handle_priv_message)
-        self.irc.add_global_handler('pubmsg', self.handle_pub_message)
-    
-    #Connect and begin processing.
-    def start(self):
-        #Create a server object, connect and join the channel.
-        self.server = self.irc.server()
-        self.connection = self.server.connect(self.network, self.port, self.nick, ircname = self.name, ipv6 = self.ipv6)
-        
-        self.irc.process_once(self.default_timeout)
-        
-        thread.start_new_thread(self.wait_join, (5, ))
+    def sendmsg(self, msg):
+        if not msg:
+            return False:
+        if msg[-1] != '\n':
+            msg += '\n'
+        self.sock.send(msg.encode())
+        return True
 
-        #Send test messages.
-        thread.start_new_thread(self.process_message_buffer, ())
+    def connect(self, host, port, rooms = None):
+        if sock:
+            return False
 
-        #Start infinite loop.
-        while True:
-            self.process(self.default_timeout)
-        #self.irc.process_forever()
-    
-    def wait_join(self, t):
-        time.sleep(t)
-        for s in self.channel:
-            print(' Joining {}'.format(s))
-            self.connection.join(s)
-    
-    def on_welcome(self, c, e):
-        for s in self.channel:
-            c.join(s)
-    
-    #Carries out one iteration of IRC communications.
-    def process(self, timeout = 0.2):
-        joined = 10
-        self.nick = self.server.get_nickname()
-        self.irc.process_once(timeout)
-        
-        if joined is 0:
-            print 'Joining channels'
-            for s in self.channel:
-                self.connection.join(s)
-            joined = -1
-        elif joined > 0:
-            joined -= 1
-    
-    #Avoids server flooding.
-    def process_message_buffer(self):
-        try:
-            while True:
-                if len(self.message_buffer) > 2:
-                    print ' Message buffer: {}'.format(len(self.message_buffer))
-                if len(self.message_buffer) > 0:
-                    msg = self.message_buffer.pop(0)
-                    if msg[0]:
-                        msg[1].action(msg[2].target(), msg[3])
-                    else:
-                        msg[1].privmsg(msg[2].target(), msg[3])
-                    time.sleep(self.sleep_time)
-                else:
-                    time.sleep(0.1)
-        except:
-            print sys.exc_info()
-    
-    #Add things to message buffer.
-    def add_to_buffer(self, connection, event, output, is_action = False):
-        self.message_buffer.append((is_action, connection, event, output))
-    
-    #Generic echo handler
-    #Output initial information from server, with leading space.
-    def handle_echo(self, connection, event):
-        print
-        print ' '.join(event.arguments())
+        self.sock=socket.socket()
+        self.sock.connect((host, port))
+         
+        self.sendmsg("NICK {}".format(nick), "UTF-8")
+        self.sendmsg("USER {} {} bla :{}".format(nick, host, realname))
 
-    #Generic echo handler
-    #Output initial information from server, but without leading space.
-    def handle_echo_no_space(self, connection, event):
-        print ' '.join(event.arguments())
+        self.sendmsg("JOIN #glory");
+         
+        while 1:
+            readbuffer = readbuffer+s.recv(1024).decode("UTF-8")
+            temp = str.split(readbuffer, "\n")
+            readbuffer=temp.pop()
+         
+            for line in temp:
+                line = str.rstrip(line)
+                line = str.split(line)
+         
+                if(line[0] == "PING"):
+                    s.send(bytes("PONG %s\r\n" % line[1], "UTF-8"))
+                if(line[1] == "PRIVMSG"):
+                    sender = ""
+                    for char in line[0]:
+                        if(char == "!"):
+                            break
+                        if(char != ":"):
+                            sender += char 
+                    size = len(line)
+                    i = 3
+                    message = ""
+                    while(i < size): 
+                        message += line[i] + " "
+                        i = i + 1
+                    message.lstrip(":")
+                    s.send(bytes("PRIVMSG %s %s \r\n" % (sender, message), "UTF-8"))
+                for index, i in enumerate(line):
+                    print(line[index])
 
-    #Handle private notices
-    def handle_priv_notice(self, connection, event):
-        if event.source():
-            print ':: ' + event.source() + ' ->' + event.arguments()[0]
-        else:
-            print event.arguments()[0]
 
-    #Handle someone joining a channel.
-    def handle_join(self, connection, event):
-        #Sources needs to be split into just the name.
-        #Data comes in the format nickname!user@host
-        print event.source().split('!')[0] + ' has joined ' + event.target()
+def main():
+    #bot = IRCBot("ircbot", "IRC Bot")
+    #bot.connect("irc.arctem.com", 6667)
+    sock = socket.socket()
+    sock.connect(('irc.arctem.com', 6667))
+    sock.send("NICK ircbot\n".encode())
+    sock.send("USER ircbot irc.arctem.com bla :IRC Bot\n".encode())
+    sock.send("JOIN #glory\n".encode())
 
-    #Accept invitations into new channels.
-    def handle_invite(self, connection, event):
-        connection.join(event.arguments()[0])
+    while True:
+        input_ready, output_ready, except_ready = select.select([sock, sys.stdin], [], [])
 
-    #Handle private messages.
-    def handle_priv_message(self, connection, event):
-        print event.source().split('!')[0] + ': ' + event.arguments()[0]
+        for item in input_ready:
+            if item == sys.stdin:
+                sock.send("{}\n".format(item.readline().strip()).encode())
+            else:
+                recv = item.recv(1024).decode()
+                print(recv)
+                if(recv.startswith("PING")):
+                    reply = recv[5:]
+                    sock.send("PONG {}\n".format(reply).encode())
 
-    #Handle public messages.
-    def handle_pub_message(self, connection, event):
-        print '<' + event.target() + '> ' + event.source().split('!')[0] + ': ' + event.arguments()[0]
+
+if __name__ == '__main__':
+    main()
