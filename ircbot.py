@@ -46,6 +46,8 @@ class IRCBot:
         if os.name != 'nt':
             inputs.append(sys.stdin)
 
+        partial_input = ''
+
         while True:
             in_ready, out_ready, except_ready = select.select(inputs, [], [])
 
@@ -54,7 +56,11 @@ class IRCBot:
                     self.sendmsg(item.readline().strip())
                 elif item == self.sock:
                     recv = item.recv(4096).decode()
-                    for recv in recv.split('\n'):
+                    recv = partial_input + recv
+                    recv = recv.split('\n')
+                    partial_input = recv.pop()
+
+                    for recv in recv:
                         if recv == None:
                             print('Remote socket {} closed.'.format(self.sock))
                             break
