@@ -7,6 +7,8 @@ import string
 import select
 
 import ircutil
+from plugin import IRCPlugin
+from command import IRCCommand
  
 
 class IRCBot:
@@ -15,6 +17,7 @@ class IRCBot:
         self.realname = realname
         self.readbuffer = ""
         self.sock = None
+        self.plugins = []
 
     def sendmsg(self, msg):
         if not msg:
@@ -24,6 +27,9 @@ class IRCBot:
             msg += '\n'
         self.sock.send(msg.encode())
         return True
+
+    def send_privmsg(self, channel, msg):
+        self.sendmsg('PRIVMSG {} {}'.format(channel, msg))
 
     def connect(self, host, port, rooms = None):
         if self.sock:
@@ -71,15 +77,21 @@ class IRCBot:
                         if cmd in response_functions.keys():
                             response_functions[cmd](prefix, args)
                         else:
-                            print('Unrecognized command {}: {}'.format(cmd, recv))
+                            print('Unrecognized command {}: {} | {}'
+                                .format(cmd, prefix, args))
 
                 else:
                     print('Something broke: {}'.format(item))
 
+    def register(self, plugin):
+        plugin.set_owner(self)
+        self.plugins.append(plugin)
+
     def get_responses(self):
         return {
             'PING': lambda pre, args: self.sendmsg('PONG {}'.format(args[0])),
-            'MODE': self.get_mode
+            'MODE': self.get_mode,
+            'PRIVMSG': self.handle_privmsg
         }
 
     def get_mode(self, prefix, args):
@@ -87,12 +99,19 @@ class IRCBot:
             for room in self.rooms:
                 self.sendmsg('JOIN {}'.format(room))
         else:
-            print('Unhandled JOIN: {}, {}'.format(prefix, args))
+            print('Unhandled JOIN: {} | {}'.format(prefix, args))
+
+    def handle_privmsg(self, prefix, args):
+        for plugin in self.plugins:
+            if plugin.trigger(prefix, args):
+                plugin.run(prefix, args)
 
 
 def main():
     bot = IRCBot("ircbot", "IRC Bot")
-    bot.connect("irc.arctem.com", 6667, ['#glory'])
+    bot.register(IRCCommand('boop', lambda self, user, chan, args: self.owner.send_privmsg(chan, user + ': bop')))
+    bot.connect('irc.arctem.com', 6667, ['#glory'])
+    #bot.connect("byrn.sudo-rmrf.net", 6667, ['#csb'])
     bot.process()
 
 

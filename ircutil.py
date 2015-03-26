@@ -1,6 +1,7 @@
 def parsemsg(s):
     """ via http://stackoverflow.com/questions/930700/python-parsing-irc-messages """
     s = s.strip()
+
     prefix = ''
     trailing = []
     if s[0] == ':':
