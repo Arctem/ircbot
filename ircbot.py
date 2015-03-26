@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-  
+
+import os
 import sys
 import socket
 import string
@@ -39,7 +40,12 @@ class IRCBot:
         if not self.sock:
             return False
 
-        inputs = [self.sock, sys.stdin]
+        response_functions = self.get_responses()
+
+        inputs = [self.sock]
+        if os.name != 'nt':
+            inputs.append(sys.stdin)
+
         while True:
             in_ready, out_ready, except_ready = select.select(inputs, [], [])
 
@@ -56,19 +62,26 @@ class IRCBot:
                             continue
 
                         prefix, cmd, args = ircutil.parsemsg(recv)
-                        if cmd == 'PING':
-                            self.sendmsg('PONG {}'.format(args[0]))
-                        elif cmd == 'MODE':
-                            if prefix == self.nick:
-                                for room in self.rooms:
-                                    self.sendmsg("JOIN {}".format(room))
-                            else:
-                                print('Unhandled: {}'.format(recv))
+                        if cmd in response_functions.keys():
+                            response_functions[cmd](prefix, args)
                         else:
                             print('Unrecognized command {}: {}'.format(cmd, recv))
 
                 else:
                     print('Something broke: {}'.format(item))
+
+    def get_responses(self):
+        return {
+            'PING': lambda pre, args: self.sendmsg('PONG {}'.format(args[0])),
+            'MODE': self.get_mode
+        }
+
+    def get_mode(self, prefix, args):
+        if prefix == self.nick:
+            for room in self.rooms:
+                self.sendmsg('JOIN {}'.format(room))
+        else:
+            print('Unhandled JOIN: {}, {}'.format(prefix, args))
 
 
 def main():
