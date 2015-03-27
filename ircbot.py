@@ -31,7 +31,7 @@ class IRCBot:
     def send_privmsg(self, channel, msg):
         self.sendmsg('PRIVMSG {} {}'.format(channel, msg))
 
-    def connect(self, host, port, rooms = None):
+    def connect(self, host, port = 6667, rooms = None):
         if self.sock:
             return False
 
