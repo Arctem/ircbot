@@ -1,0 +1,10 @@
+from setuptools import setup
+
+setup(name='ircbot',
+      version='0.1',
+      description='A simple library for making IRC bots.',
+      url='http://github.com/Arctem/ircbot/',
+      author='Russell White',
+      author_email='rarctem@gmail.com',
+      packages=['ircbot'],
+      zip_safe=False)
