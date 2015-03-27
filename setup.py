@@ -1,5 +1,7 @@
 from setuptools import setup
 
+import ircbot
+
 setup(name='ircbot',
       version='0.1',
       description='A simple library for making IRC bots.',

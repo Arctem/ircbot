@@ -6,9 +6,9 @@ import socket
 import string
 import select
 
-import ircutil
-from plugin import IRCPlugin
-from command import IRCCommand
+from ircbot import ircutil
+from ircbot.plugin import IRCPlugin
+from ircbot.command import IRCCommand
  
 
 class IRCBot:
@@ -105,15 +105,3 @@ class IRCBot:
         for plugin in self.plugins:
             if plugin.trigger(prefix, args):
                 plugin.run(prefix, args)
-
-
-def main():
-    bot = IRCBot("ircbot", "IRC Bot")
-    bot.register(IRCCommand('boop', lambda self, user, chan, args: self.owner.send_privmsg(chan, user + ': bop')))
-    bot.connect('irc.arctem.com', 6667, ['#glory'])
-    #bot.connect("byrn.sudo-rmrf.net", 6667, ['#csb'])
-    bot.process()
-
-
-if __name__ == '__main__':
-    main()

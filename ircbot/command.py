@@ -1,6 +1,6 @@
 import re
 
-from plugin import IRCPlugin
+from ircbot.plugin import IRCPlugin
 
 class IRCCommand(IRCPlugin):
     """A command is a type of plugin that reacts specifically to messages of
