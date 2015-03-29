@@ -102,6 +102,8 @@ class IRCBot:
             print('Unhandled JOIN: {} | {}'.format(prefix, args))
 
     def handle_privmsg(self, prefix, args):
+        print(prefix, args)
         for plugin in self.plugins:
-            if plugin.trigger(prefix, args):
-                plugin.run(prefix, args)
+            if 'PRIVMSG' in plugin.triggers:
+                if plugin.triggers['PRIVMSG'](prefix, args):
+                    plugin.run(prefix, args)

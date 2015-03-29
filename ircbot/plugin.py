@@ -5,12 +5,10 @@ class IRCPlugin:
 
     def __init__(self):
         self.owner = None
+        self.triggers = {}
 
     def set_owner(self, owner):
         self.owner = owner
-
-    def trigger(self, args):
-        return False
 
     def run(self, args):
         pass

@@ -11,8 +11,9 @@ class IRCCommand(IRCPlugin):
         IRCPlugin.__init__(self)
         self.name = name
         self.function = function
+        self.triggers['PRIVMSG'] = self.privmsg
 
-    def trigger(self, prefix, args):
+    def privmsg(self, prefix, args):
         channel = args[0]
         args = ' '.join(args[1:])
 
