@@ -6,6 +6,10 @@ import socket
 import string
 import select
 
+import colorama
+colorama.init()
+from colorama import Fore
+
 from ircbot import ircutil
 from ircbot.plugin import IRCPlugin
 from ircbot.command import IRCCommand
@@ -22,7 +26,7 @@ class IRCBot:
     def sendmsg(self, msg):
         if not msg:
             return False
-        print('Sending: {}'.format(msg))
+        print('{}Sending: {}{}'.format(Fore.GREEN, msg, Fore.RESET))
         if msg[-1] != '\n':
             msg += '\n'
         self.sock.send(msg.encode())
@@ -91,7 +95,9 @@ class IRCBot:
         return {
             'PING': lambda pre, args: self.sendmsg('PONG {}'.format(args[0])),
             'MODE': self.get_mode,
-            'PRIVMSG': self.handle_privmsg
+            'PRIVMSG': self.handle_generic,
+            'JOIN': self.handle_generic,
+            'NOTICE': self.print_msg
         }
 
     def get_mode(self, prefix, args):
@@ -99,11 +105,23 @@ class IRCBot:
             for room in self.rooms:
                 self.sendmsg('JOIN {}'.format(room))
         else:
-            print('Unhandled JOIN: {} | {}'.format(prefix, args))
+            print('Unhandled MODE: {} | {}'.format(prefix, args))
 
-    def handle_privmsg(self, prefix, args):
-        print(prefix, args)
+    def handle_generic(self, command, prefix, args):
+        triggered = False
+
         for plugin in self.plugins:
-            if 'PRIVMSG' in plugin.triggers:
-                if plugin.triggers['PRIVMSG'](prefix, args):
+            if command in plugin.triggers:
+                if plugin.triggers[command](prefix, args):
+                    triggered = True
                     plugin.run(prefix, args)
+
+        if not triggered:
+            self.print_alert('Did not trigger: {} {} {}'.format(command, prefix, args))
+
+    def print_msg(self, prefix, args):
+        msg = ' '.join(args[1:])
+        print('{}{}{}'.format(Fore.YELLOW, msg, Fore.RESET))
+
+    def print_alert(self, message):
+        print('{}{}{}'.format(Fore.PINK, msg, Fore.RESET))
