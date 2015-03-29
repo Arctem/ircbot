@@ -79,7 +79,7 @@ class IRCBot:
 
                         prefix, cmd, args = ircutil.parsemsg(recv)
                         if cmd in response_functions.keys():
-                            response_functions[cmd](prefix, args)
+                            response_functions[cmd](cmd, prefix, args)
                         else:
                             print('Unrecognized command {}: {} | {}'
                                 .format(cmd, prefix, args))
@@ -93,14 +93,15 @@ class IRCBot:
 
     def get_responses(self):
         return {
-            'PING': lambda pre, args: self.sendmsg('PONG {}'.format(args[0])),
+            'PING': lambda cmd, pre, args: self.sendmsg('PONG ' + args[0]),
             'MODE': self.get_mode,
             'PRIVMSG': self.handle_generic,
             'JOIN': self.handle_generic,
+            '353': self.handle_generic,
             'NOTICE': self.print_msg
         }
 
-    def get_mode(self, prefix, args):
+    def get_mode(self, command, prefix, args):
         if prefix == self.nick:
             for room in self.rooms:
                 self.sendmsg('JOIN {}'.format(room))
@@ -114,14 +115,14 @@ class IRCBot:
             if command in plugin.triggers:
                 if plugin.triggers[command](prefix, args):
                     triggered = True
-                    plugin.run(prefix, args)
+                    plugin.responses[command](prefix, args)
 
         if not triggered:
             self.print_alert('Did not trigger: {} {} {}'.format(command, prefix, args))
 
-    def print_msg(self, prefix, args):
+    def print_msg(self, command, prefix, args):
         msg = ' '.join(args[1:])
         print('{}{}{}'.format(Fore.YELLOW, msg, Fore.RESET))
 
-    def print_alert(self, message):
-        print('{}{}{}'.format(Fore.PINK, msg, Fore.RESET))
+    def print_alert(self, msg):
+        print('{}{}{}'.format(Fore.LIGHTRED_EX, msg, Fore.RESET))
