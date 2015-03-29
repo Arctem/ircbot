@@ -12,3 +12,9 @@ class IRCPlugin:
 
     def run(self, args):
         pass
+
+    def name(self):
+        return None
+
+    def description(self):
+        return None
