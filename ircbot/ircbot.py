@@ -31,7 +31,19 @@ class IRCBot:
             msg += '\n'
         self.sock.send(msg.encode())
         return True
+ 
 
+    # <+wopr> rfc 2812: "The command MUST either be a valid IRC command or a
+    #         three digit number represented in ASCII text. IRC messages are
+    #         always lines of characters terminated with a CR-LF pair, and these
+    #         messages SHALL NOT exceed 512 characters in length, counting all
+    #         characters including the trailing CR-LF. Thus, there are 510
+    #         characters maximum allowed for the command and its parameters."
+    # <+wopr> arctem: it's ~361 if nick, user, host, and channel name are all at
+    #         their max values
+    # <+wopr> from https://forums.unrealircd.org/viewtopic.php?t=6811
+    #         (NICKLEN and CHANNELLEN haven't been changed on this server as
+    #         far as I can tell
     def send_privmsg(self, channel, msg):
         self.sendmsg('PRIVMSG {} {}'.format(channel, msg))
 
