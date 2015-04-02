@@ -8,43 +8,45 @@ class UserTracker(IRCPlugin):
 
         self.rooms = {}
 
-        self.triggers['JOIN'] = self.join_trigger
-        self.responses['JOIN'] = self.join
+        self.triggers['JOIN'] = self.join
 
-        self.triggers['353'] = self.names_trigger
-        self.responses['353'] = self.names
-
-    def join_trigger(self, prefix, args):
-        return prefix.split('!')[0] == self.owner.nick
+        self.triggers['353'] = self.names
 
     def join(self, prefix, args):
-        room = args[0]
+        trig = prefix.split('!')[0] == self.owner.nick
 
-        if room not in self.rooms:
-            self.rooms[room] = []
+        if trig:
+            room = args[0]
 
-        self.owner.sendmsg('NAMES ' + room)
+            if room not in self.rooms:
+                self.rooms[room] = []
 
-    def names_trigger(self, prefix, args):
-        return args[1] == '@'
+            self.owner.sendmsg('NAMES ' + room)
+
+        return trig
 
     def names(self, prefix, args):
-        me = args[0]
-        room = args[2]
-        users = args[3].split()
-        users = map(lambda u: u.strip('+&@~'), users) #probably needs more added
+        trig = args[1] == '@'
 
-        new_user_list = []
+        if trig:
+            me = args[0]
+            room = args[2]
+            users = args[3].split()
+            users = map(lambda u: u.strip('+&@~'), users) #probably needs more added
 
-        #This is done to maintain the list order
-        for u in self.rooms[room]:
-            if u in users:
-                new_user_list.append(u)
+            new_user_list = []
 
-        for u in users:
-            if u not in new_user_list:
-                new_user_list.append(u)
+            #This is done to maintain the list order
+            for u in self.rooms[room]:
+                if u in users:
+                    new_user_list.append(u)
 
-        self.rooms[room] = new_user_list
-        print('{}{}: {}{}'.format(Fore.YELLOW, room, self.rooms[room],
-            Fore.RESET))
+            for u in users:
+                if u not in new_user_list:
+                    new_user_list.append(u)
+
+            self.rooms[room] = new_user_list
+            print('{}{}: {}{}'.format(Fore.YELLOW, room, self.rooms[room],
+                Fore.RESET))
+
+        return trig

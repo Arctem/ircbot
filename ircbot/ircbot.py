@@ -127,7 +127,6 @@ class IRCBot:
             if command in plugin.triggers:
                 if plugin.triggers[command](prefix, args):
                     triggered = True
-                    plugin.responses[command](prefix, args)
 
         if not triggered:
             self.print_alert('Did not trigger: {} {} {}'.format(command, prefix, args))
