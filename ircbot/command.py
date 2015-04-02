@@ -27,7 +27,7 @@ class IRCCommand(IRCPlugin):
         print(prefix, args)
         user = prefix.split('!')[0]
         chan = args.pop(0)
-        self.function(self, user, chan, args[1:])
+        self.function(user, chan, args[1:])
 
     def name(self):
         return self.command
