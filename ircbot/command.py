@@ -14,20 +14,18 @@ class IRCCommand(IRCPlugin):
         self.description = description
 
         self.triggers['PRIVMSG'] = self.privmsg
-        self.responses['PRIVMSG'] = self.run
 
     def privmsg(self, prefix, args):
-        channel = args[0]
-        args = ' '.join(args[1:])
+        channel = args.pop(0)
+        user = prefix.split('!')[0]
 
         reg = re.compile(r'^{}[:,] {}'.format(self.owner.nick, self.command))
-        return bool(reg.match(args))
+        trig = bool(reg.match(' '.join(args)))
 
-    def run(self, prefix, args):
-        print(prefix, args)
-        user = prefix.split('!')[0]
-        chan = args.pop(0)
-        self.function(user, chan, args[1:])
+        if trig:
+            self.function(user, channel, args[1:])
+
+        return trig
 
     def name(self):
         return self.command

@@ -6,7 +6,6 @@ class IRCPlugin:
     def __init__(self):
         self.owner = None
         self.triggers = {}
-        self.responses = {}
 
     def set_owner(self, owner):
         self.owner = owner
