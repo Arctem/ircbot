@@ -20,7 +20,7 @@ class IRCCommand(IRCPlugin):
         channel = args[0]
         args = ' '.join(args[1:])
 
-        reg = re.compile('^{}[:,] {}'.format(self.owner.nick, self.command))
+        reg = re.compile(r'^{}[:,] {}'.format(self.owner.nick, self.command))
         return bool(reg.match(args))
 
     def run(self, prefix, args):
