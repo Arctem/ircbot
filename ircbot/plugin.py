@@ -10,9 +10,6 @@ class IRCPlugin:
     def set_owner(self, owner):
         self.owner = owner
 
-    def run(self, args):
-        pass
-
     def name(self):
         return None
 

@@ -125,7 +125,7 @@ class IRCBot:
 
         for plugin in self.plugins:
             if command in plugin.triggers:
-                if plugin.triggers[command](prefix, args):
+                if plugin.triggers[command](prefix, args[:]):
                     triggered = True
 
         if not triggered:
