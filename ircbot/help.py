@@ -2,7 +2,7 @@ from ircbot.command import IRCCommand
 
 class Help(IRCCommand):
     def __init__(self, intro=None, outro=None):
-        IRCCommand.__init__(self, 'help', Help.help_cmd)
+        IRCCommand.__init__(self, 'help', self.help_cmd)
         self.intro = intro
         self.outro = outro
 
