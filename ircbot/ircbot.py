@@ -136,4 +136,4 @@ class IRCBot:
         print('{}{}{}'.format(Fore.YELLOW, msg, Fore.RESET))
 
     def print_alert(self, msg):
-        print('{}{}{}'.format(Fore.LIGHTRED_EX, msg, Fore.RESET))
+        print('{}{}{}'.format(Fore.RED, msg, Fore.RESET))
