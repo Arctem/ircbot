@@ -19,7 +19,7 @@ class IRCCommand(IRCPlugin):
         channel = args.pop(0)
         user = prefix.split('!')[0]
 
-        reg = re.compile('^{}[:,] {}'.format(self.owner.nick, self.command))
+        reg = re.compile(r'^{}[:,] {}'.format(self.owner.nick, self.command))
         trig = bool(reg.match(' '.join(args)))
 
         if trig:
