@@ -8,9 +8,9 @@ class UserTracker(IRCPlugin):
 
         self.rooms = {}
 
-        self.triggers['JOIN'] = self.join
+        self.triggers['JOIN'] = (0, self.join)
 
-        self.triggers['353'] = self.names
+        self.triggers['353'] = (0, self.names)
 
     def join(self, prefix, args):
         trig = prefix.split('!')[0] == self.owner.nick

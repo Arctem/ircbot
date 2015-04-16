@@ -13,7 +13,7 @@ from colorama import Fore
 from ircbot import ircutil
 from ircbot.plugin import IRCPlugin
 from ircbot.command import IRCCommand
- 
+
 
 class IRCBot:
     def __init__(self, nick, realname):
@@ -31,7 +31,7 @@ class IRCBot:
             msg += '\n'
         self.sock.send(msg.encode())
         return True
- 
+
 
     # <+wopr> rfc 2812: "The command MUST either be a valid IRC command or a
     #         three digit number represented in ASCII text. IRC messages are
@@ -54,7 +54,7 @@ class IRCBot:
         self.sock=socket.socket()
         self.sock.connect((host, port))
         self.rooms = rooms or []
-         
+
         self.sendmsg("NICK {}".format(self.nick))#, "UTF-8")
         self.sendmsg("USER {} {} bla :{}".format(self.nick, host, self.realname))
 
@@ -120,13 +120,22 @@ class IRCBot:
         else:
             print('Unhandled MODE: {} | {}'.format(prefix, args))
 
+    def group_plugins(self, command):
+        """Grabs plugins with given command and sorts based on priority."""
+        return sorted(filter(lambda p: command in p.triggers, self.plugins),
+            key=lambda p: p.triggers[command][0], reverse=True)
+
     def handle_generic(self, command, prefix, args):
         triggered = False
 
-        for plugin in self.plugins:
-            if command in plugin.triggers:
-                if plugin.triggers[command](prefix, args[:]):
-                    triggered = True
+        for plugin in self.group_plugins(command):
+            retval = plugin.triggers[command][1](prefix, args[:]):
+            if retval:
+                triggered = True
+                #Returning 2 indicates to also block future commands.
+                if retval == 2:
+                    break
+
 
         if not triggered:
             self.print_alert('Did not trigger: {} {} {}'.format(command, prefix, args))
