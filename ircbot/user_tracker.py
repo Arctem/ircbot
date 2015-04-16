@@ -8,10 +8,10 @@ class UserTracker(IRCPlugin):
 
         self.rooms = {}
 
-        self.triggers['JOIN'] = self.join
+        self.triggers['JOIN'] = (0, self.join)
         #should also track MODE for other users
 
-        self.triggers['353'] = self.names
+        self.triggers['353'] = (0, self.names)
 
     def join(self, prefix, args):
         user = prefix.split('!')[0]
@@ -20,7 +20,6 @@ class UserTracker(IRCPlugin):
         trig = user == self.owner.nick
 
         if trig:
-
             if chan not in self.rooms:
                 self.rooms[chan] = []
 

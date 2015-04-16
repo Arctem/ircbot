@@ -7,13 +7,15 @@ class IRCCommand(IRCPlugin):
     the form '<botname>[:,] <commandname> <args>'
     """
 
-    def __init__(self, command, function, description=None):
+    def __init__(self, command, function, description=None, blocks=True,
+            priority=10):
         IRCPlugin.__init__(self)
         self.command = command
         self.function = function
         self.description = description
+        self.blocks = blocks
 
-        self.triggers['PRIVMSG'] = self.privmsg
+        self.triggers['PRIVMSG'] = (priority, self.privmsg)
 
     def privmsg(self, prefix, args):
         channel = args.pop(0)
@@ -27,7 +29,10 @@ class IRCCommand(IRCPlugin):
             args = args[2] if len(args) == 3 else None
             self.function(user, channel, args)
 
-        return trig
+        if trig and self.blocks:
+            return 2
+        else:
+            return trig
 
     def name(self):
         return self.command
