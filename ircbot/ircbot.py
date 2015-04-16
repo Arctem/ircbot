@@ -129,7 +129,7 @@ class IRCBot:
         triggered = False
 
         for plugin in self.group_plugins(command):
-            retval = plugin.triggers[command][1](prefix, args[:]):
+            retval = plugin.triggers[command][1](prefix, args[:])
             if retval:
                 triggered = True
                 #Returning 2 indicates to also block future commands.
