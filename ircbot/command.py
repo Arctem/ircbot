@@ -25,7 +25,7 @@ class IRCCommand(IRCPlugin):
         trig = bool(reg.match(' '.join(args)))
 
         if trig:
-            args = args[0].split(None, 3)
+            args = args[0].split(None, 2)
             args = args[2] if len(args) == 3 else None
             self.function(user, channel, args)
 
