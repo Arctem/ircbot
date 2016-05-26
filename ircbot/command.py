@@ -1,41 +1,29 @@
 import re
 
 from ircbot.plugin import IRCPlugin
+from ircbot.events import enablehelp, debugout
 
 class IRCCommand(IRCPlugin):
     """A command is a type of plugin that reacts specifically to messages of
     the form '<botname>[:,] <commandname> <args>'
     """
 
-    def __init__(self, command, function, description=None, blocks=True,
-            priority=10):
-        IRCPlugin.__init__(self)
-        self.command = command
-        self.function = function
-        self.description = description
-        self.blocks = blocks
+    def __init__(self, name, function, description=None):
+        super(IRCCommand, self).__init__()
+        self._name = name
+        self._function = function
+        self._description = description
 
-        self.triggers['PRIVMSG'] = (priority, self.privmsg)
+    def ready(self, component):
+        self.fire(debugout("Loaded {} command".format(self._name)))
+        self.fire(enablehelp(self))
 
-    def privmsg(self, prefix, args):
-        channel = args.pop(0)
-        user = prefix.split('!')[0]
-
-        reg = re.compile(r'^{}[:,] {}'.format(self.owner.nick, self.command))
-        trig = bool(reg.match(' '.join(args)))
-
-        if trig:
-            args = args[0].split(None, 2)
-            args = args[2] if len(args) == 3 else None
-            self.function(user, channel, args)
-
-        if trig and self.blocks:
-            return 2
-        else:
-            return trig
+    def command(self, source, target, cmd, args):
+        if cmd == self._name:
+            self._function(source, target, args)
 
     def name(self):
-        return self.command
+        return self._name
 
     def description(self):
-        return self.description
+        return self._description

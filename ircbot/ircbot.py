@@ -1,148 +1,86 @@
 #!/usr/bin/env python3
 
-import os
+import re
 import sys
-import socket
-import string
-import select
+
+from circuits import Component
+from circuits.net.sockets import TCPClient, connect
+from circuits.protocols.irc import IRC, PRIVMSG, USER, NICK, JOIN
+
+from circuits.protocols.irc import ERR_NICKNAMEINUSE
+from circuits.protocols.irc import RPL_ENDOFMOTD, ERR_NOMOTD
 
 import colorama
 colorama.init()
 from colorama import Fore
 
-from ircbot import ircutil
-from ircbot.plugin import IRCPlugin
-from ircbot.command import IRCCommand
+from ircbot.events import *
+from ircbot.models import User
 
+class IRCBot(Component):
+    channel = 'ircbot'
 
-class IRCBot:
-    def __init__(self, nick, realname):
+    def init(self, host="irc.sudo-rmrf.net", port="6667", channel="#csb", nick="testbot"):
+        self.host = host
+        self.port = int(port)
         self.nick = nick
-        self.realname = realname
-        self.readbuffer = ""
-        self.sock = None
-        self.plugins = []
+        self.channel = channel
 
-    def sendmsg(self, msg):
-        if not msg:
-            return False
-        print('{}Sending: {}{}'.format(Fore.GREEN, msg, Fore.RESET))
-        if msg[-1] != '\n':
-            msg += '\n'
-        self.sock.send(msg.encode())
-        return True
+        # Add TCPClient and IRC to the system.
+        TCPClient(channel=self.channel).register(self)
+        IRC(channel=self.channel).register(self)
 
+    #triggered when initialization is done
+    def ready(self, component):
+        self.fire(debugalert("Connecting!"))
+        self.fire(connect(self.host, self.port))
 
-    # <+wopr> rfc 2812: "The command MUST either be a valid IRC command or a
-    #         three digit number represented in ASCII text. IRC messages are
-    #         always lines of characters terminated with a CR-LF pair, and these
-    #         messages SHALL NOT exceed 512 characters in length, counting all
-    #         characters including the trailing CR-LF. Thus, there are 510
-    #         characters maximum allowed for the command and its parameters."
-    # <+wopr> arctem: it's ~361 if nick, user, host, and channel name are all at
-    #         their max values
-    # <+wopr> from https://forums.unrealircd.org/viewtopic.php?t=6811
-    #         (NICKLEN and CHANNELLEN haven't been changed on this server as
-    #         far as I can tell
-    def send_privmsg(self, channel, msg):
-        self.sendmsg('PRIVMSG {} {}'.format(channel, msg))
+    def connected(self, host, port):
+        self.fire(NICK(self.nick))
+        self.fire(USER(self.nick, self.nick, host, "I'm a test bot!"))
 
-    def connect(self, host, port = 6667, rooms = None):
-        if self.sock:
-            return False
+    def disconnected(self):
+        raise SystemExit(0)
 
-        self.sock=socket.socket()
-        self.sock.connect((host, port))
-        self.rooms = rooms or []
+    #triggered by numeric events
+    #see https://github.com/circuits/circuits/blob/master/circuits/protocols/irc/numerics.py
+    def numeric(self, source, numeric, *args):
+        if numeric == ERR_NICKNAMEINUSE:
+            self.fire(NICK("{0:s}_".format(self.nick)))
+        elif numeric in (RPL_ENDOFMOTD, ERR_NOMOTD):
+            self.fire(JOIN(self.channel))
 
-        self.sendmsg("NICK {}".format(self.nick))#, "UTF-8")
-        self.sendmsg("USER {} {} bla :{}".format(self.nick, host, self.realname))
+    def privmsg(self, source, target, message):
+        source = User(*source)
 
-    def process(self):
-        if not self.sock:
-            return False
+        self.fire(debugout("{} <{}> {}".format(source.nick, target, message)))
 
-        response_functions = self.get_responses()
+        regex_cmd = re.compile(r'^\.(?P<command>[^\s]+)(?: (?P<args>.*))?$'.format(nick=self.nick))
+        regex_direct = re.compile(r'^{nick}[:,] (?P<msg>.+)$'.format(nick=self.nick))
 
-        inputs = [self.sock]
-        if os.name != 'nt':
-            inputs.append(sys.stdin)
-
-        partial_input = ''
-
-        while True:
-            in_ready, out_ready, except_ready = select.select(inputs, [], [])
-
-            for item in in_ready:
-                if item == sys.stdin:
-                    self.sendmsg(item.readline().strip())
-                elif item == self.sock:
-                    recv = item.recv(4096).decode()
-                    recv = partial_input + recv
-                    recv = recv.split('\n')
-                    partial_input = recv.pop()
-
-                    for recv in recv:
-                        if recv == None:
-                            print('Remote socket {} closed.'.format(self.sock))
-                            break
-                        if len(recv) == 0:
-                            continue
-
-                        prefix, cmd, args = ircutil.parsemsg(recv)
-                        if cmd in response_functions.keys():
-                            response_functions[cmd](cmd, prefix, args)
-                        else:
-                            print('Unrecognized command {}: {} | {}'
-                                .format(cmd, prefix, args))
-
-                else:
-                    print('Something broke: {}'.format(item))
-
-    def register(self, plugin):
-        plugin.set_owner(self)
-        self.plugins.append(plugin)
-
-    def get_responses(self):
-        return {
-            'PING': lambda cmd, pre, args: self.sendmsg('PONG ' + args[0]),
-            'MODE': self.get_mode,
-            'PRIVMSG': self.handle_generic,
-            'JOIN': self.handle_generic,
-            '353': self.handle_generic,
-            'NOTICE': self.print_msg
-        }
-
-    def get_mode(self, command, prefix, args):
-        if prefix == self.nick:
-            for room in self.rooms:
-                self.sendmsg('JOIN {}'.format(room))
+        if target.startswith("#"):
+            cmd_match = regex_cmd.search(message)
+            direct_match = regex_direct.search(message)
+            if cmd_match:
+                cmd = cmd_match.group('command')
+                args = cmd_match.group('args')
+                self.fire(command(source, target, cmd, args))
+            elif direct_match:
+                msg = direct_match.group('msg')
+                self.fire(directmessage(source, target, msg))
+            else:
+                self.fire(generalmessage(source, target, message))
         else:
-            print('Unhandled MODE: {} | {}'.format(prefix, args))
+            pass
+            #private message
+            #self.fire(PRIVMSG(source[0], message))
 
-    def group_plugins(self, command):
-        """Grabs plugins with given command and sorts based on priority."""
-        return sorted(filter(lambda p: command in p.triggers, self.plugins),
-            key=lambda p: p.triggers[command][0], reverse=True)
+    def sendmessage(self, target, message):
+        print('{}Sending {}: {}{}'.format(Fore.RED, target, message, Fore.RESET))
+        self.fire(PRIVMSG(target, message))
 
-    def handle_generic(self, command, prefix, args):
-        triggered = False
-
-        for plugin in self.group_plugins(command):
-            retval = plugin.triggers[command][1](prefix, args[:])
-            if retval:
-                triggered = True
-                #Returning 2 indicates to also block future commands.
-                if retval == 2:
-                    break
-
-
-        if not triggered:
-            self.print_alert('Did not trigger: {} {} {}'.format(command, prefix, args))
-
-    def print_msg(self, command, prefix, args):
-        msg = ' '.join(args[1:])
+    def debugout(self, msg):
         print('{}{}{}'.format(Fore.YELLOW, msg, Fore.RESET))
 
-    def print_alert(self, msg):
+    def debugalert(self, msg):
         print('{}{}{}'.format(Fore.RED, msg, Fore.RESET))

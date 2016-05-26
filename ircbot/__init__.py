@@ -1,1 +1,1 @@
-from ircbot import ircbot, ircutil, command, plugin, storage
+from ircbot import ircbot, command, plugin, storage, events, models
