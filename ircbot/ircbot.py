@@ -20,15 +20,18 @@ from ircbot.models import User
 class IRCBot(Component):
     channel = 'ircbot'
 
-    def init(self, host="irc.sudo-rmrf.net", port="6667", channel="#csb", nick="testbot"):
+    def __init__(self, host="irc.sudo-rmrf.net", port="6667", channel="#csb", nick="testbot", realname='IRC Bot'):
+        super(IRCBot, self).__init__()
         self.host = host
         self.port = int(port)
         self.nick = nick
         self.channel = channel
+        self.realname = realname
 
         # Add TCPClient and IRC to the system.
         TCPClient(channel=self.channel).register(self)
         IRC(channel=self.channel).register(self)
+        print("Initialized!")
 
     #triggered when initialization is done
     def ready(self, component):
@@ -37,7 +40,7 @@ class IRCBot(Component):
 
     def connected(self, host, port):
         self.fire(NICK(self.nick))
-        self.fire(USER(self.nick, self.nick, host, "I'm a test bot!"))
+        self.fire(USER(self.nick, self.nick, host, self.realname))
 
     def disconnected(self):
         raise SystemExit(0)
@@ -64,7 +67,7 @@ class IRCBot(Component):
             if cmd_match:
                 cmd = cmd_match.group('command')
                 args = cmd_match.group('args')
-                self.fire(command(source, target, cmd, args))
+                self.fire(command(source, target, cmd, args or ''))
             elif direct_match:
                 msg = direct_match.group('msg')
                 self.fire(directmessage(source, target, msg))

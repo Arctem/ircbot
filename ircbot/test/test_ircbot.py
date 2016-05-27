@@ -7,7 +7,7 @@ from ircbot.events import sendmessage
 
 def main():
     bot = IRCBot(host="irc.sudo-rmrf.net", port=6667, channel="#services", nick="testbot")
-    Help("Intro", "Outro").register(bot)
+    h = Help("Intro", "Outro").register(bot)
     IRCCommand('boop', lambda user, chan, args: bot.fire(sendmessage(chan, user.nick + ': bop'))).register(bot)
     d = Debugger().register(bot)
     bot.run()
