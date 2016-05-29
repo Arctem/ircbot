@@ -5,10 +5,10 @@ import sys
 
 from circuits import Component
 from circuits.net.sockets import TCPClient, connect
-from circuits.protocols.irc import IRC, PRIVMSG, USER, NICK, JOIN
+from circuits.protocols.irc import IRC, PRIVMSG, USER, NICK, JOIN, NAMES
 
 from circuits.protocols.irc import ERR_NICKNAMEINUSE
-from circuits.protocols.irc import RPL_ENDOFMOTD, ERR_NOMOTD
+from circuits.protocols.irc import RPL_ENDOFMOTD, ERR_NOMOTD, RPL_NAMEREPLY
 
 import colorama
 colorama.init()
@@ -16,6 +16,7 @@ from colorama import Fore
 
 from ircbot.events import *
 from ircbot.models import User
+import ircbot.user_controller as user_controller
 
 class IRCBot(Component):
     channel = 'ircbot'
@@ -31,7 +32,7 @@ class IRCBot(Component):
         # Add TCPClient and IRC to the system.
         TCPClient(channel=self.channel).register(self)
         IRC(channel=self.channel).register(self)
-        print("Initialized!")
+        self.fire(debugalert("Initialized!"))
 
     #triggered when initialization is done
     def ready(self, component):
@@ -53,8 +54,12 @@ class IRCBot(Component):
         elif numeric in (RPL_ENDOFMOTD, ERR_NOMOTD):
             self.fire(JOIN(self.channel))
 
+    def join(self, bot_info, channel):
+        self.nick = bot_info[0]
+        self.realname = bot_info[1]
+
     def privmsg(self, source, target, message):
-        source = User(*source)
+        source = user_controller.get_or_create_user(*source)
 
         self.fire(debugout("{} <{}> {}".format(source.nick, target, message)))
 
