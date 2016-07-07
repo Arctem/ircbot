@@ -1,6 +1,8 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.base import object_mapper
+from sqlalchemy.orm.exc import UnmappedInstanceError
 
 Base = declarative_base()
 
@@ -12,6 +14,14 @@ def initialize(dbname='sqlite:///:memory:'):
     engine = create_engine(dbname, echo=True)
     session = sessionmaker(bind=engine)
     Base.metadata.create_all(engine)
+
+def is_mapped(obj):
+    try:
+        object_mapper(obj)
+    except UnmappedInstanceError:
+        return False
+    return True
+
 
 ##################
 # Decorators
@@ -25,7 +35,7 @@ def needs_session(func):
             s._irc_atomic = False
 
             retval = func(*args, s=s, **kwargs)
-            if retval and retval.id:
+            if retval and is_mapped(retval) and retval.id:
                 s.expunge(retval)
             # s.expunge_all()
             s.close()
