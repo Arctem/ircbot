@@ -13,7 +13,8 @@ class UserTracker(IRCPlugin):
 
 class LastMessage(IRCCommand):
     def __init__(self):
-        IRCCommand.__init__(self, 'last', self.last_cmd)
+        IRCCommand.__init__(self, 'last', self.last_cmd, args='<username>',
+                            description='Shows the last activity by the given user.')
 
     def last_cmd(self, user, chan, args):
         last = user_controller.get_last_message(chan, args)
