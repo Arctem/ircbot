@@ -12,7 +12,7 @@ session = None
 def initialize(dbname='sqlite:///:memory:'):
     global engine, session
     engine = create_engine(dbname, echo=True)
-    session = sessionmaker(bind=engine)
+    session = sessionmaker(bind=engine, expire_on_commit=False)
     Base.metadata.create_all(engine)
 
 def is_mapped(obj):
@@ -37,7 +37,6 @@ def needs_session(func):
             retval = func(*args, s=s, **kwargs)
             if retval and is_mapped(retval) and retval.id:
                 s.expunge(retval)
-            # s.expunge_all()
             s.close()
             return retval
         else:
