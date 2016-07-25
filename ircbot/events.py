@@ -3,6 +3,9 @@ from circuits import Event
 class sendmessage(Event):
     """Send a PRIVMSG to the server."""
 
+class sendaction(Event):
+    """Send a PRIVMSG to the server with ACTION formatting."""
+
 class command(Event):
     """Someone called a specific command."""
 
@@ -11,6 +14,9 @@ class directmessage(Event):
 
 class generalmessage(Event):
     """Someone said something that was not a command or DM."""
+
+class actionmessage(Event):
+    """Someone did an action. (/me)"""
 
 class enablehelp(Event):
     """Let the help module know you exist."""

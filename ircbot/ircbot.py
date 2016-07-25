@@ -63,13 +63,18 @@ class IRCBot(Component):
 
         self.fire(debugout("{} <{}> {}".format(source.nick, target, message)))
 
-        regex_cmd = re.compile(r'^\.(?P<command>[^\s]+)(?: (?P<args>.*))?$'.format(nick=self.nick))
+        regex_action = re.compile('\x01ACTION (?P<action>.*)\x01')
+        regex_cmd = re.compile(r'^\.(?P<command>[^\s]+)(?: (?P<args>.*))?$')
         regex_direct = re.compile(r'^{nick}[:,] (?P<msg>.+)$'.format(nick=self.nick))
 
         if target.startswith("#"):
+            action_match = regex_action.search(message)
             cmd_match = regex_cmd.search(message)
             direct_match = regex_direct.search(message)
-            if cmd_match:
+            if action_match:
+                action = action_match.group('action')
+                self.fire(actionmessage(source, target, action))
+            elif cmd_match:
                 cmd = cmd_match.group('command')
                 args = cmd_match.group('args')
                 self.fire(command(source, target, cmd, args or ''))
@@ -86,6 +91,10 @@ class IRCBot(Component):
     def sendmessage(self, target, message):
         print('{}Sending {}: {}{}'.format(Fore.RED, target, message, Fore.RESET))
         self.fire(PRIVMSG(target, message))
+
+    def sendaction(self, target, action):
+        print('{}Sending {} {}{}'.format(Fore.RED, target, action, Fore.RESET))
+        self.fire(PRIVMSG(target, '\x01ACTION {}\x01'.format(action)))
 
     def debugout(self, msg):
         print('{}{}{}'.format(Fore.YELLOW, msg, Fore.RESET))
