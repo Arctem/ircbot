@@ -10,5 +10,5 @@ setup(name='ircbot',
     author_email='rarctem@gmail.com',
     packages=['ircbot'],
     zip_safe=False,
-    install_requires=['circuits', 'colorama'],
+    install_requires=['circuits', 'colorama', 'sqlalchemy'],
 )

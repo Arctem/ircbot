@@ -55,6 +55,7 @@ class IRCBot(Component):
             self.fire(JOIN(self.channel))
 
     def join(self, bot_info, channel):
+        # this appears to trigger on EVERY join.
         self.nick = bot_info[0]
         self.realname = bot_info[1]
 

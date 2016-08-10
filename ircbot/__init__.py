@@ -1,1 +1,1 @@
-from ircbot import ircbot, command, plugin, storage, events, models, usertracker
+from ircbot import ircbot, admin, command, plugin, storage, events, models, usertracker

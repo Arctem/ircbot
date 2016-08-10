@@ -11,6 +11,7 @@ class User(Base):
     name = Column(String)
     hostname = Column(String)
     admin = Column(Boolean, default=False)
+    bot = Column(Boolean, default=False)
 
     owner_id = Column(Integer, ForeignKey('users.id'))
     # owner = relationship('User', remote_side=[id])
