@@ -19,6 +19,15 @@ class User(Base):
     aliases = relationship('User', backref=backref('owner', remote_side=[id]))
 
     messages = relationship('Message', back_populates='speaker')
+    user_channels = relationship('UserChannel', back_populates='player')
+
+class UserChannel(Base):
+    __tablename__ = 'user_channel'
+
+    id = Column(Integer, primary_key=True)
+    player_id = Column(Integer, ForeignKey('users.id'))
+    player = relationship('User', back_populates='user_channels')
+    channel = Column(String)
 
 class Message(Base):
     __tablename__ = 'messages'

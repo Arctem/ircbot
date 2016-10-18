@@ -11,6 +11,16 @@ class UserTracker(IRCPlugin):
     def generalmessage(self, source, target, msg):
         user_controller.save_message(source, target, msg)
 
+    def join(self, info, channel):
+        nick, realname, address = info
+        user = user_controller.get_or_create_user(nick, name=realname)
+        return user_controller.add_user_to_channel(user, channel)
+
+    def quit(self, info, channel):
+        nick, realname, address = info
+        user = user_controller.get_or_create_user(nick, name=realname)
+        return user_controller.remove_user_from_channel(user, channel)
+
 class LastMessage(IRCCommand):
     def __init__(self):
         IRCCommand.__init__(self, 'last', self.last_cmd, args='<username>',

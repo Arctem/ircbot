@@ -54,10 +54,21 @@ class IRCBot(Component):
         elif numeric in (RPL_ENDOFMOTD, ERR_NOMOTD):
             self.fire(JOIN(self.channel))
 
-    def join(self, bot_info, channel):
+    def join(self, join_info, channel):
         # this appears to trigger on EVERY join.
-        self.nick = bot_info[0]
-        self.realname = bot_info[1]
+        nick, realname, address = join_info
+        self.fire(sendmessage(self.channel, "{}-{} just joined.".format(nick, realname)))
+
+    def quit(self, quit_info, channel):
+        nick, realname, address = quit_info
+        self.fire(sendmessage(self.channel, "{}-{} just left.".format(nick, realname)))
+
+    def nick(self, new_nick, channel):
+        self.nick = nick
+
+    def mode(self, mode_info, nick, permissions):
+        self.nick = nick
+        self.fire(sendmessage(self.channel, "I am {}.".format(self.nick)))
 
     def privmsg(self, source, target, message):
         source = user_controller.get_or_create_user(*source)

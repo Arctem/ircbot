@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import ircbot.storage as db
-from ircbot.models import User, Message
+from ircbot.models import User, UserChannel, Message
 
 @db.atomic
 def get_user(nick, name=None, host=None, s=None):
@@ -35,6 +35,22 @@ def get_last_message(channel, nick=None, s=None):
         return s.query(Message).filter_by(speaker=target, channel=channel).order_by(Message.timestamp.desc()).first()
     else:
         return s.query(Message).filter_by(channel=channel).order_by(Message.timestamp.desc()).first()
+
+@db.needs_session
+def add_user_to_channel(user, channel, s=None):
+    user_channel = s.query(UserChannel).filter_by(user=user, channel=channel).one_or_none()
+    if not user_channel:
+        user_channel = UserChannel(user=user, channel=channel)
+        s.add(user_channel)
+    return user_channel
+
+@db.needs_session
+def remove_user_from_channel(user, channel, s=None):
+    return s.query(UserChannel).filter_by(user=user, channel=channel).delete() > 0
+
+@db.needs_session
+def empty_channel(channel, s=None):
+    return s.query(UserChannel).filter_by(channel=channel).delete()
 
 #need a more generic way to do this
 @db.atomic
