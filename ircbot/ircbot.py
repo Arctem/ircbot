@@ -55,7 +55,6 @@ class IRCBot(Component):
             self.fire(JOIN(self.channel))
 
     def join(self, join_info, channel):
-        # this appears to trigger on EVERY join.
         nick, realname, address = join_info
         self.fire(sendmessage(self.channel, "{}-{} just joined.".format(nick, realname)))
 
