@@ -15,6 +15,9 @@ class directmessage(Event):
 class generalmessage(Event):
     """Someone said something that was not a command or DM."""
 
+class privatemessage(Event):
+    """Someone said something that was not a command or DM, but not in a normal channel."""
+
 class actionmessage(Event):
     """Someone did an action. (/me)"""
 

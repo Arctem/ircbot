@@ -78,10 +78,13 @@ class IRCBot(Component):
         regex_cmd = re.compile(r'^\.(?P<command>[^\s]+)(?: (?P<args>.*))?$')
         regex_direct = re.compile(r'^{nick}[:,] (?P<msg>.+)$'.format(nick=self.nick))
 
+        action_match = regex_action.search(message)
+        cmd_match = regex_cmd.search(message)
+
         if target.startswith("#"):
-            action_match = regex_action.search(message)
-            cmd_match = regex_cmd.search(message)
+            #message in a channel
             direct_match = regex_direct.search(message)
+
             if action_match:
                 action = action_match.group('action')
                 self.fire(actionmessage(source, target, action))
@@ -95,9 +98,17 @@ class IRCBot(Component):
             else:
                 self.fire(generalmessage(source, target, message))
         else:
-            pass
             #private message
-            #self.fire(PRIVMSG(source[0], message))
+            channel = source.nick
+            if action_match:
+                action = action_match.group('command')
+                self.fire(actionmessage(source, channel, action))
+            elif cmd_match:
+                cmd = cmd_match.group('command')
+                args = cmd_match.group('args')
+                self.fire(command(source, channel, cmd, args or ''))
+            else:
+                self.fire(privatemessage(source, channel, message))
 
     def sendmessage(self, target, message):
         print('{}Sending {}: {}{}'.format(Fore.RED, target, message, Fore.RESET))
