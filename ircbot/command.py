@@ -1,7 +1,7 @@
 import re
 
 from ircbot.plugin import IRCPlugin
-from ircbot.events import enablehelp, debugout
+from ircbot.events import enablehelp, enablestats, debugout
 
 def make_cmd_description(cmd, args, description=None):
     cmd = cmd.strip()
@@ -25,6 +25,7 @@ class IRCCommand(IRCPlugin):
     def ready(self, component):
         self.fire(debugout("Loaded {} command".format(self._name)))
         self.fire(enablehelp(self))
+        self.fire(enablestats(self))
 
     def command(self, source, target, cmd, args):
         if cmd == self._name:
@@ -35,3 +36,6 @@ class IRCCommand(IRCPlugin):
 
     def description(self):
         return self._description
+
+    def stats(self):
+        return set()

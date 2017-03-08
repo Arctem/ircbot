@@ -1,9 +1,10 @@
 from circuits import Debugger
 
-from ircbot.ircbot import IRCBot
 from ircbot.command import IRCCommand
-from ircbot.help import Help
 from ircbot.events import sendmessage
+from ircbot.help import Help
+from ircbot.ircbot import IRCBot
+from ircbot.stats import Stats
 from ircbot.usertracker import UserTracker, LastMessage
 
 from ircbot import storage
@@ -15,6 +16,7 @@ def main():
     h = Help("Intro", "Outro").register(bot)
     UserTracker().register(bot)
     LastMessage().register(bot)
+    Stats().register(bot)
     IRCCommand('boop', lambda user, chan, args: bot.fire(sendmessage(chan, user.nick + ': bop'))).register(bot)
     d = Debugger().register(bot)
     bot.run()

@@ -24,6 +24,9 @@ class actionmessage(Event):
 class enablehelp(Event):
     """Let the help module know you exist."""
 
+class enablestats(Event):
+    """Let the stats module know you exist."""
+
 class debugout(Event):
     """Print normal debug output to console."""
 

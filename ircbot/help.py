@@ -55,3 +55,8 @@ class Help(IRCCommand):
 
     def enablehelp(self, module):
         self.modules.append(module)
+
+    def stats(self):
+        return {
+            (lambda: 'There are {} modules with help info.'.format(len(self.modules)), ('help', 'count')),
+        }
