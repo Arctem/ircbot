@@ -3,7 +3,7 @@ from setuptools import setup
 import ircbot
 
 setup(name='ircbot',
-    version='0.3',
+    version='0.3.1',
     description='A simple library for making IRC bots.',
     url='http://github.com/Arctem/ircbot/',
     author='Russell White',
