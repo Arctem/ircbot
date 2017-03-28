@@ -18,6 +18,7 @@ from ircbot.events import *
 from ircbot.models import User
 import ircbot.user_controller as user_controller
 
+
 class IRCBot(Component):
     channel = 'ircbot'
 
@@ -34,7 +35,7 @@ class IRCBot(Component):
         IRC(channel=self.channel).register(self)
         self.fire(debugalert("Initialized!"))
 
-    #triggered when initialization is done
+    # triggered when initialization is done
     def ready(self, component):
         self.fire(debugalert("Connecting!"))
         self.fire(connect(self.host, self.port))
@@ -46,8 +47,8 @@ class IRCBot(Component):
     def disconnected(self):
         raise SystemExit(0)
 
-    #triggered by numeric events
-    #see https://github.com/circuits/circuits/blob/master/circuits/protocols/irc/numerics.py
+    # triggered by numeric events
+    # see https://github.com/circuits/circuits/blob/master/circuits/protocols/irc/numerics.py
     def numeric(self, source, numeric, *args):
         if numeric == ERR_NICKNAMEINUSE:
             self.fire(NICK("{0:s}_".format(self.nick)))
@@ -82,7 +83,7 @@ class IRCBot(Component):
         cmd_match = regex_cmd.search(message)
 
         if target.startswith("#"):
-            #message in a channel
+            # message in a channel
             direct_match = regex_direct.search(message)
 
             if action_match:
@@ -98,7 +99,7 @@ class IRCBot(Component):
             else:
                 self.fire(generalmessage(source, target, message))
         else:
-            #private message
+            # private message
             channel = source.nick
             if action_match:
                 action = action_match.group('command')
