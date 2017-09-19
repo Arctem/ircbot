@@ -57,18 +57,18 @@ class IRCBot(Component):
 
     def join(self, join_info, channel):
         nick, realname, address = join_info
-        self.fire(sendmessage(self.channel, "{}-{} just joined.".format(nick, realname)))
+        self.fire(join(self.channel, nick, realname))
 
     def quit(self, quit_info, channel):
         nick, realname, address = quit_info
-        self.fire(sendmessage(self.channel, "{}-{} just left.".format(nick, realname)))
+        self.fire(leave(self.channel, nick, realname))
 
     def nick(self, new_nick, channel):
         self.nick = nick
 
     def mode(self, mode_info, nick, permissions):
         self.nick = nick
-        self.fire(sendmessage(self.channel, "I am {}.".format(self.nick)))
+        # self.fire(sendmessage(self.channel, "I am {}.".format(self.nick)))
 
     def privmsg(self, source, target, message):
         source = user_controller.get_or_create_user(*source)
