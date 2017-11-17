@@ -13,15 +13,15 @@ class Admin(IRCCommand):
             args='<username> <option> <value>',
             description='Allows specifying certain options about users.')
 
-    def admin_cmd(self, user, channel, args):
+    def admin_cmd(self, ctx, user, channel, args):
         if not user.admin:
-            self.fire(sendmessage(channel, '{}: You are not an admin.'.format(user.nick)))
+            self.fire(reply(ctx, '{user}: You are not an admin.'))
             return False
 
         cmd_args = cmd_regex.match(args)
 
         if not cmd_args:
-            self.fire(sendmessage(channel, '{}: Could not parse command.'.format(user.nick)))
+            self.fire(reply(ctx, '{user}: Could not parse command.'))
             return False
 
         nick = cmd_args.group('nick')
@@ -29,8 +29,8 @@ class Admin(IRCCommand):
         value = cmd_args.group('value')
 
         if user_controller.set_attribute(nick, attribute, value):
-            self.fire(sendmessage(channel, '{}: Attribute set successfully.'.format(user.nick)))
+            self.fire(reply(ctx, '{}: Attribute set successfully.'))
             return True
         else:
-            self.fire(sendmessage(channel, '{}: Attribute not set.'.format(user.nick)))
+            self.fire(reply(ctx, '{}: Attribute not set.'))
             return False

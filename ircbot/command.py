@@ -1,7 +1,7 @@
 import re
 
 from ircbot.plugin import IRCPlugin
-from ircbot.events import enablehelp, enablestats, debugout, sendmessage
+from ircbot.events import enablehelp, enablestats, debugout, reply
 
 
 def make_cmd_description(cmd, args, description=None):
@@ -29,12 +29,12 @@ class IRCCommand(IRCPlugin):
         self.fire(enablehelp(self))
         self.fire(enablestats(self))
 
-    def command(self, user, channel, cmd, args):
-        if cmd == self._name:
+    def command(self, ctx):
+        if ctx.command == self._name:
             try:
-                self._function(user, channel, args)
+                self._function(ctx)
             except Exception as err:
-                self.fire(sendmessage(channel, '{}: Error defining: {}'.format(user.nick, err)))
+                self.fire(reply(ctx, '{user}: Error defining: {error}', error=err))
                 raise
 
     def name(self):

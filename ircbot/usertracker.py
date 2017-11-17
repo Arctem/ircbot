@@ -1,15 +1,11 @@
 from ircbot.command import IRCCommand
-from ircbot.events import sendmessage
+from ircbot.events import reply
 from ircbot.models import User, Message
 from ircbot.plugin import IRCPlugin
 import ircbot.user_controller as user_controller
 
-class UserTracker(IRCPlugin):
-    def directmessage(self, source, target, msg):
-        user_controller.save_message(source, target, msg)
 
-    def generalmessage(self, source, target, msg):
-        user_controller.save_message(source, target, msg)
+class UserTracker(IRCPlugin):
 
     def join(self, info, channel):
         nick, realname, address = info
@@ -21,17 +17,25 @@ class UserTracker(IRCPlugin):
         user = user_controller.get_or_create_user(nick, name=realname)
         return user_controller.remove_user_from_channel(user, channel)
 
+
 class LastMessage(IRCCommand):
+
     def __init__(self):
         IRCCommand.__init__(self, 'last', self.last_cmd, args='<username>',
                             description='Shows the last activity by the given user.')
 
-    def last_cmd(self, user, chan, args):
-        last = user_controller.get_last_message(chan, args)
+    def last_cmd(self, ctx):
+        speaker = None
+        if ctx.command_args:
+            speaker = user_controller.get_user(ctx.command_args)
+            if not speaker:
+                self.fire(reply(ctx, '{user}: Could not find user {}.', target=speaker))
+                return
+        last = user_controller.get_last_message(ctx.channel, speaker)
         if last:
-            self.fire(sendmessage(chan, str(last)))
+            self.fire(reply(ctx, str(last)))
         else:
-            if args:
-                self.fire(sendmessage(chan, '{}: No message found for {}.'.format(user.nick, args)))
+            if speaker:
+                self.fire(reply(ctx, '{user}: No message found for {target}.', target=speaker))
             else:
-                self.fire(sendmessage(chan, '{}: No message found.'.format(user.nick)))
+                self.fire(reply(ctx, '{user}: No message found.'))

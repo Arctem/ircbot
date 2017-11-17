@@ -4,15 +4,18 @@ from ircbot.command import IRCCommand
 from ircbot.events import sendmessage
 from ircbot.help import Help
 from ircbot.ircbot import IRCBot
+from ircbot.discordbot import DiscordBot
 from ircbot.stats import Stats
 from ircbot.usertracker import UserTracker, LastMessage
 
 from ircbot import storage
-# storage.initialize('sqlite:///testbot.db')
-storage.initialize()
+storage.initialize('sqlite:///testbot.db')
+# storage.initialize('sqlite://')
+
 
 def main():
-    bot = IRCBot(host="irc.sudo-rmrf.net", port=6667, channel="#bot", nick="testbot")
+    # bot = IRCBot(host="irc.sudo-rmrf.net", port=6667, channel="#bot", nick="testbot")
+    bot = DiscordBot(open('arc_token.txt', 'r').read().strip())
     h = Help("Intro", "Outro").register(bot)
     UserTracker().register(bot)
     LastMessage().register(bot)

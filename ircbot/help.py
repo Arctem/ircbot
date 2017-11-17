@@ -9,14 +9,14 @@ class Help(IRCCommand):
         self.outro = outro
         self.modules = []
 
-    def help_cmd(self, user, chan, args):
+    def help_cmd(self, ctx, user, chan, args):
         if args:
-            msg = self.specific_help_message(user, chan, args)
+            msg = self.specific_help_message(ctx, user, chan, args)
         else:
-            msg = self.general_help_message(user, chan)
-        self.fire(sendmessage(chan, msg))
+            msg = self.general_help_message(ctx, user, chan)
+        self.fire(reply(ctx, msg))
 
-    def general_help_message(self, user, chan):
+    def general_help_message(self, ctx, user, chan):
         response = []
 
         if self.intro:
@@ -32,7 +32,7 @@ class Help(IRCCommand):
 
         return ' '.join(response)
 
-    def specific_help_message(self, user, chan, args):
+    def specific_help_message(self, ctx, user, chan, args):
         module_name = args.split()[0]
         subtopics = args.split()[1:]
         for module in self.modules:

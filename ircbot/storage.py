@@ -9,11 +9,13 @@ Base = declarative_base()
 engine = None
 session = None
 
+
 def initialize(dbname='sqlite:///:memory:'):
     global engine, session
     engine = create_engine(dbname, echo=True)
     session = sessionmaker(bind=engine, expire_on_commit=False)
     Base.metadata.create_all(engine)
+
 
 def is_mapped(obj):
     try:
@@ -27,7 +29,7 @@ def is_mapped(obj):
 # Decorators
 ##################
 
-#loads a session if needed
+# loads a session if needed
 def needs_session(func):
     def needs_session_wrapper(*args, s=None, **kwargs):
         if not s:
@@ -35,7 +37,7 @@ def needs_session(func):
             s._irc_atomic = False
 
             retval = func(*args, s=s, **kwargs)
-            if retval and is_mapped(retval) and retval.id:
+            if retval and is_mapped(retval) and retval in s:  # and retval.id?
                 s.expunge(retval)
             s.close()
             return retval
@@ -43,7 +45,9 @@ def needs_session(func):
             return func(*args, s=s, **kwargs)
     return needs_session_wrapper
 
-#make sure we commit at the end of this function
+# make sure we commit at the end of this function
+
+
 def atomic(func):
     @needs_session
     def atomic_wrapper(*args, s=None, **kwargs):

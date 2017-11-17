@@ -9,12 +9,12 @@ class Stats(IRCCommand):
                             description='Show various stats from active modules. Will show a random stat that fits with the keywords given.')
         self.modules = []
 
-    def stats_cmd(self, user, chan, args):
+    def stats_cmd(self, ctx, user, chan, args):
         func, labels = self.stat(args)
         if not func:
-            self.fire(sendmessage(chan, '{}: No stats found for given labels.'.format(user.nick)))
+            self.fire(reply(ctx, '{user}: No stats found for given labels.'))
         else:
-            self.fire(sendmessage(chan, '{}: {}'.format('/'.join(labels), func())))
+            self.fire(reply(ctx, '{}: {}'.format('/'.join(labels), func())))
 
     def stat(self, args):
         topics = set(args.split())

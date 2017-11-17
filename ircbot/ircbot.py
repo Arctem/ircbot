@@ -3,23 +3,20 @@
 import re
 import sys
 
-from circuits import Component
+
 from circuits.net.sockets import TCPClient, connect
 from circuits.protocols.irc import IRC, PRIVMSG, USER, NICK, JOIN, NAMES
 
 from circuits.protocols.irc import ERR_NICKNAMEINUSE
 from circuits.protocols.irc import RPL_ENDOFMOTD, ERR_NOMOTD, RPL_NAMEREPLY
 
-import colorama
-colorama.init()
-from colorama import Fore
-
+from ircbot.bot import Bot
 from ircbot.events import *
 from ircbot.models import User
 import ircbot.user_controller as user_controller
 
 
-class IRCBot(Component):
+class IRCBot(Bot):
     channel = 'ircbot'
 
     def __init__(self, host="irc.sudo-rmrf.net", port="6667", channel="#csb", nick="testbot", realname='IRC Bot'):
@@ -36,7 +33,7 @@ class IRCBot(Component):
         self.fire(debugalert("Initialized!"))
 
     # triggered when initialization is done
-    def ready(self, component):
+    def started(self, component):
         self.fire(debugalert("Connecting!"))
         self.fire(connect(self.host, self.port))
 
@@ -118,9 +115,3 @@ class IRCBot(Component):
     def sendaction(self, target, action):
         print('{}Sending {} {}{}'.format(Fore.RED, target, action, Fore.RESET))
         self.fire(PRIVMSG(target, '\x01ACTION {}\x01'.format(action)))
-
-    def debugout(self, msg):
-        print('{}{}{}'.format(Fore.YELLOW, msg, Fore.RESET))
-
-    def debugalert(self, msg):
-        print('{}{}{}'.format(Fore.RED, msg, Fore.RESET))
