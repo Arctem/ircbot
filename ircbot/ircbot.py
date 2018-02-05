@@ -55,9 +55,9 @@ class IRCBot(Component):
         elif numeric in (RPL_ENDOFMOTD, ERR_NOMOTD):
             self.fire(JOIN(self.channel))
 
-    def join(self, join_info, channel):
-        nick, realname, address = join_info
-        self.fire(join(self.channel, nick, realname))
+    # def join(self, join_info, channel):
+    #     nick, realname, address = join_info
+    #     self.fire(join(self.channel, nick, realname))
 
     def quit(self, quit_info, channel):
         nick, realname, address = quit_info
