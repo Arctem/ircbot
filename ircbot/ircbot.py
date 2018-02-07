@@ -5,7 +5,7 @@ import sys
 
 from circuits import Component
 from circuits.net.sockets import TCPClient, connect
-from circuits.protocols.irc import IRC, PRIVMSG, USER, NICK, JOIN, NAMES
+from circuits.protocols.irc import IRC, PRIVMSG, USER, NICK, JOIN, NAMES, NOTICE
 
 from circuits.protocols.irc import ERR_NICKNAMEINUSE
 from circuits.protocols.irc import RPL_ENDOFMOTD, ERR_NOMOTD, RPL_NAMEREPLY
@@ -118,6 +118,10 @@ class IRCBot(Component):
     def sendaction(self, target, action):
         print('{}Sending {} {}{}'.format(Fore.RED, target, action, Fore.RESET))
         self.fire(PRIVMSG(target, '\x01ACTION {}\x01'.format(action)))
+
+    def sendnotice(self, target, notice):
+        print('{}Sending {}: {}{}'.format(Fore.RED, target, notice, Fore.RESET))
+        self.fire(NOTICE(target, notice))
 
     def debugout(self, msg):
         print('{}{}{}'.format(Fore.YELLOW, msg, Fore.RESET))
