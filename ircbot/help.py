@@ -1,7 +1,9 @@
 from ircbot.command import IRCCommand
 from ircbot.events import sendmessage
 
+
 class Help(IRCCommand):
+
     def __init__(self, intro=None, outro=None):
         IRCCommand.__init__(self, 'help', self.help_cmd, args='<module> [<subcommands>]',
                             description='Show detailed information on active modules. For modules that have subtopics, add extra arguments for each one.')
@@ -39,7 +41,7 @@ class Help(IRCCommand):
             if module.name() == module_name:
                 try:
                     if len(subtopics) > 0:
-                        subhelp = module.help_topics
+                        subhelp = module.help_topics()
                         while len(subtopics) > 0:
                             subhelp = subhelp[subtopics[0]]
                             subtopics.pop(0)
