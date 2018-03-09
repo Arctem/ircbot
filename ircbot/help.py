@@ -39,18 +39,32 @@ class Help(IRCCommand):
         subtopics = args.split()[1:]
         for module in self.modules:
             if module.name() == module_name:
+                subhelp = {}
                 try:
-                    if len(subtopics) > 0:
-                        subhelp = module.help_topics()
-                        while len(subtopics) > 0:
-                            subhelp = subhelp[subtopics[0]]
-                            subtopics.pop(0)
-                        return subhelp[None]
-                except (KeyError, AttributeError):
+                    subhelp = module.help_topics()
+                except (NameError, TypeError):
+                    pass
+                if module.description():
+                    subhelp[None] = module.description()
+
+                try:
+                    while len(subtopics) > 0:
+                        subhelp = subhelp[subtopics[0]]
+                        subtopics.pop(0)
+
+                    if isinstance(subhelp, str):
+                        return subhelp
+
+                    message = subhelp[None]
+                    subkeys = list(subhelp.keys())
+                    if None in subkeys:
+                        subkeys.remove(None)
+                    if len(subkeys) > 0:
+                        message += " Subtopics: {}".format(", ".join(sorted(subkeys)))
+                    return message
+                except (KeyError, AttributeError) as e:
                     return 'Could not find subtopic {} in module {}.'.format(subtopics[0], module.name())
 
-                if module.description():
-                    return module.description()
                 else:
                     return 'No help message available for {}.'.format(module.name())
         return 'Could not find module {}.'.format(module_name)
