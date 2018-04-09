@@ -42,7 +42,7 @@ class Help(IRCCommand):
                 subhelp = {}
                 try:
                     subhelp = module.help_topics()
-                except (NameError, TypeError):
+                except (NameError, TypeError, AttributeError):
                     pass
                 if module.description():
                     subhelp[None] = module.description()
